@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>   مکانیزم مقایسه کسری</title>
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap" rel="stylesheet">
+  <!-- فونت ساده و سیستم -->
+  <style>
+
+
+    
+    /* ====== متغیرهای تم ====== */
+    :root {
+      font-family: 'Vazirmatn', sans-serif;
+      --bg: #0f1216;
+      --bg-soft: #151922;
+      --text: #e7e9ee;
+      --muted: #aab2c0;
+      --primary: #5b9cff;
+      --primary-weak: #2a66cc;
+      --accent: #22c55e;
+      --danger: #ef4444;
+      --border: #262b36;
+      --card: #141923;
+      --shadow: rgba(0,0,0,0.25);
+      --link: #8ab4f8;
+    }
+    .light {
+      --bg: #f7f8fb;
+      --bg-soft: #ffffff;
+      --text: #0f1220;
+      --muted: #475569;
+      --primary: #2563eb;
+      --primary-weak: #1e40af;
+      --accent: #16a34a;
+      --danger: #dc2626;
+      --border: #e2e8f0;
+      --card: #ffffff;
+      --shadow: rgba(0,0,0,0.08);
+      --link: #1d4ed8;
+    }
+
+    /* ====== پایه ====== */
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Nastaliq", "Vazirmatn", "IRANSans", sans-serif; }
+    a { color: var(--link); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ====== ناوبری ====== */
+    header {
+      position: sticky; top: 0; z-index: 50;
+      background: var(--bg-soft);
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 6px 16px var(--shadow);
+    }
+    .nav {
+      display: flex; align-items: center; justify-content: space-between;
+      max-width: 1200px; margin: 0 auto; padding: 12px 16px;
+    }
+    .nav-left { display: flex; gap: 10px; align-items: center; }
+    .brand {
+      display: flex; align-items: center; gap: 10px; font-weight: 700; letter-spacing: .2px;
+    }
+    .brand .logo {
+      width: 32px; height: 32px; border-radius: 8px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      box-shadow: 0 4px 12px var(--shadow);
+    }
+    .tabs {
+      display: flex; gap: 6px; flex-wrap: wrap;
+      margin-inline-start: 16px;
+    }
+    .tab {
+      padding: 8px 12px; border-radius: 10px; border: 1px solid var(--border);
+      background: var(--card); color: var(--text); cursor: pointer; font-size: 14px;
+    }
+    .tab.active {
+      background: linear-gradient(135deg, var(--primary), var(--primary-weak));
+      border-color: transparent; color: #fff;
+    }
+    .nav-right { display: flex; gap: 8px; align-items: center; }
+    .btn {
+      padding: 8px 12px; border-radius: 10px; border: 1px solid var(--border);
+      background: var(--card); color: var(--text); cursor: pointer; font-size: 14px;
+    }
+    .btn:hover { filter: brightness(1.05); }
+    .btn.primary { background: var(--primary); color: #fff; border-color: transparent; }
+    .btn.danger { background: var(--danger); color: #fff; border-color: transparent; }
+    .btn.accent { background: var(--accent); color: #fff; border-color: transparent; }
+
+    /* ====== لایه اصلی ====== */
+    main { max-width: 1200px; margin: 16px auto; padding: 0 16px; }
+    section {
+      display: none;
+      border: 1px solid var(--border); border-radius: 16px;
+      background: var(--card);
+      box-shadow: 0 10px 24px var(--shadow);
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    section.active { display: block; }
+    h2 { margin: 0 0 12px 0; font-size: 20px; }
+    .muted { color: var(--muted); font-size: 13px; }
+
+    /* ====== کارت‌ها ====== */
+    .grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+    .card {
+      border: 1px solid var(--border); border-radius: 14px;
+      background: var(--bg-soft); padding: 12px;
+      box-shadow: 0 6px 16px var(--shadow);
+    }
+    .card header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px dashed var(--border); margin-bottom: 10px; padding-bottom: 8px; }
+    .badge { display: inline-block; padding: 4px 8px; border-radius: 999px; font-size: 12px; border: 1px solid var(--border); background: var(--card); }
+
+    /* ====== فرم ====== */
+    .form { display: grid; gap: 10px; grid-template-columns: repeat(12, 1fr); }
+    .col-12 { grid-column: span 12; }
+    .col-6 { grid-column: span 6; }
+    .col-4 { grid-column: span 4; }
+    .col-3 { grid-column: span 3; }
+    label { font-size: 13px; color: var(--muted); margin-bottom: 6px; display: block; }
+    input, select, textarea {
+      width: 100%; padding: 10px; border-radius: 10px;
+      border: 1px solid var(--border); background: var(--bg-soft); color: var(--text);
+      font-size: 14px;
+    }
+    textarea { min-height: 90px; resize: vertical; }
+    .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+    .chip {
+      padding: 6px 10px; background: var(--card); border: 1px dashed var(--border); border-radius: 999px; font-size: 12px; cursor: pointer;
+    }
+    .chip.active { background: var(--accent); color: #fff; border-style: solid; }
+
+    /* ====== جدول مقایسه ====== */
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid var(--border); padding: 10px; text-align: center; }
+    th { background: var(--bg-soft); }
+    .pos { color: var(--accent); font-weight: 600; }
+    .neg { color: var(--danger); font-weight: 600; }
+
+    /* ====== کامنت‌ها ====== */
+    .comment { border: 1px dashed var(--border); border-radius: 12px; padding: 10px; background: var(--bg-soft); }
+    .comment header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .stars { color: #fbbf24; }
+
+    /* ====== ریسپانسیو ====== */
+    @media (max-width: 640px) {
+      .tabs { display: none; }
+      .form { grid-template-columns: repeat(6, 1fr); }
+      .col-6 { grid-column: span 6; }
+      .col-4 { grid-column: span 6; }
+      .col-3 { grid-column: span 3; }
+    }
+  </style>
+</head>
+<body>
+  <!-- ====== هدر و ناوبری ====== -->
+  <header>
+    <nav class="nav">
+      <div class="nav-left">
+        <div class="brand">
+          <div class="logo" aria-hidden="true"></div>
+          <span id="brandTitle">سامانه مقایسه کسری </span>
+        </div>
+        <div class="tabs" role="tablist" aria-label="navigation">
+          <button class="tab active" data-target="welcome">خوش آمدید به مکانیزم مقایسه </button>
+          <button class="tab" data-target="guide">راهنما</button>
+          <button class="tab" data-target="compare">مقایسه</button>
+          <button class="tab" data-target="people">مدیریت افراد</button>
+          <button class="tab" data-target="comments">نظرات</button>
+          <button class="tab" data-target="about">درباره ما</button>
+          <button class="tab" data-target="contact">تماس با ما</button>
+        </div>
+      </div>
+      <div class="nav-right">
+        <button class="btn" id="langToggle" aria-label="تغییر زبان">FA</button>
+        <button class="btn" id="themeToggle" aria-label="تغییر تم">تاریک</button>
+        <button class="btn primary" id="saveAll" aria-label="ذخیره در مرورگر">ذخیره</button>
+        <button class="btn danger" id="resetAll" aria-label="بازنشانی کامل">بازنشانی</button>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <!-- ====== خوش آمدید ====== -->
+    <section id="welcome" class="active">
+      <h2 data-t="welcome_title">خوش آمدید</h2>
+      <p class="muted" data-t="welcome_sub">یک سامانه سبک، سریع و کامل برای مقایسه معلم‌ها و کارمندها—بدون بک‌اند، همه‌چیز در مرورگر شما.</p>
+      <div class="grid">
+        <div class="card">
+          <header>
+            <strong data-t="quick_start">شروع سریع</strong>
+            <span class="badge">SPA</span>
+          </header>
+          <ul>
+            <li><strong>گام ۱:</strong> از بخش «مدیریت افراد» نمونه‌ها را ببین یا افراد جدید اضافه کن.</li>
+            <li><strong>گام ۲:</strong> در «مقایسه»، افراد را انتخاب کن و تفاوت‌ها را ببین.</li>
+            <li><strong>گام ۳:</strong> در «نظرات»، بازخورد ثبت کن—همه در LocalStorage ذخیره می‌شود.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <header>
+            <strong data-t="feat_title">ویژگی‌ها</strong>
+            <span class="badge">Frontend Only</span>
+          </header>
+          <ul>
+            <li><strong>زبان:</strong> فارسی/English با یک کلیک.</li>
+            <li><strong>تم:</strong> روشن/تاریک با حفظ حالت.</li>
+            <li><strong>مدیریت:</strong> افزودن، ویرایش، حذف، جستجو، فیلتر، مرتب‌سازی.</li>
+            <li><strong>مقایسه:</strong> نکات مثبت/منفی، امتیازدهی، برچسب‌ها، جدول تمیز.</li>
+            <li><strong>نظرات:</strong> ستاره، متن، زمان، ذخیره محلی.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <header>
+            <strong data-t="privacy_title">حریم خصوصی</strong>
+            <span class="badge">LocalStorage</span>
+          </header>
+          <p>تمام داده‌ها روی مرورگر خودت ذخیره و کنترل می‌شود. می‌توانی هر زمان «بازنشانی» کنی. در حال حاضرو این سایت در حال گسترش و اظافه شدن بک اند و تغییر اساسی و خیلی ويژه تم و زیبا سازی است</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== راهنما ====== -->
+    <section id="guide">
+      <h2 data-t="guide_title">راهنما</h2>
+      <div class="grid">
+        <div class="card">
+          <header><strong>مدیریت افراد</strong></header>
+          <p>با فرم «افزودن فرد»، نام، نقش، مهارت‌ها، امتیاز، نکات مثبت/منفی و … را ثبت کن. می‌توانی هر مورد را ویرایش یا حذف کنی.</p>
+        </div>
+        <div class="card">
+          <header><strong>مقایسه</strong></header>
+          <p>دو تا چهار نفر انتخاب کن تا جدول مقایسه ویژگی‌ها نمایش داده شود. اختلاف‌ها با رنگ مشخص می‌شوند و جمع‌بندی مثبت/منفی می‌آید.</p>
+        </div>
+        <div class="card">
+          <header><strong>نظرات</strong></header>
+          <p>برای هر فرد نظر با امتیاز ستاره ثبت کن. میانگین امتیاز در کارت‌ها نمایش داده می‌شود.</p>
+        </div>
+        <div class="card">
+          <header><strong>زبان و تم</strong></header>
+          <p>از دکمه‌های بالا برای تغییر زبان و تم استفاده کن. حالت‌ها ذخیره می‌شوند و با هر بار باز شدن سایت اعمال می‌گردند.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== مدیریت افراد ====== -->
+    <section id="people">
+      <h2>مدیریت افراد</h2>
+      <div class="card">
+        <header>
+          <strong>افزودن/ویرایش فرد</strong>
+          <span class="muted">فیلدهای ضروری را پر کن</span>
+        </header>
+        <form id="personForm" class="form" autocomplete="off">
+          <div class="col-6">
+            <label>نام و نام‌خانوادگی</label>
+            <input type="text" id="f_name" placeholder="مثلاً: رضا احمدی" required/>
+          </div>
+          <div class="col-3">
+            <label>نقش</label>
+            <select id="f_role">
+              <option value="teacher">معلم</option>
+              <option value="employee">کارمند</option>
+            </select>
+          </div>
+          <div class="col-3">
+            <label>امتیاز کلی (۱ تا ۵)</label>
+            <input type="number" id="f_rating" min="1" max="5" step="0.1" placeholder="4.5" required/>
+          </div>
+          <div class="col-12">
+            <label>مهارت‌ها (با Enter اضافه کن)</label>
+            <input type="text" id="f_skillInput" placeholder="مثلاً: ریاضی، مدیریت زمان"/>
+            <div id="f_skills" class="chips"></div>
+          </div>
+          <div class="col-6">
+            <label>نکات مثبت (با Enter)</label>
+            <input type="text" id="f_posInput" placeholder="مثلاً: صبور"/>
+            <div id="f_pos" class="chips"></div>
+          </div>
+          <div class="col-6">
+            <label>نکات منفی (با Enter)</label>
+            <input type="text" id="f_negInput" placeholder="مثلاً: تأخیر گاهی"/>
+            <div id="f_neg" class="chips"></div>
+          </div>
+          <div class="col-6">
+            <label>تخصص/درس یا واحد</label>
+            <input type="text" id="f_department" placeholder="مثلاً: فیزیک / منابع انسانی"/>
+          </div>
+          <div class="col-6">
+            <label>سال‌های تجربه</label>
+            <input type="number" id="f_years" min="0" max="50" placeholder="10"/>
+          </div>
+          <div class="col-12">
+            <label>توضیحات</label>
+            <textarea id="f_bio" placeholder="چند خط درباره فرد..."></textarea>
+          </div>
+          <div class="col-12" style="display:flex; gap:8px; justify-content:flex-start;">
+            <button type="submit" class="btn primary">ثبت</button>
+            <button type="button" class="btn" id="formClear">پاک‌سازی</button>
+          </div>
+          <input type="hidden" id="f_id"/>
+        </form>
+      </div>
+
+      <div class="card">
+        <header>
+          <strong>جستجو/فیلتر/مرتب‌سازی</strong>
+          <span class="muted">سریع پیدا کن</span>
+        </header>
+        <div class="form">
+          <div class="col-6">
+            <label>جستجو نام/توضیحات</label>
+            <input type="text" id="searchInput" placeholder="کلیدواژه..."/>
+          </div>
+          <div class="col-3">
+            <label>فیلتر نقش</label>
+            <select id="filterRole">
+              <option value="all">همه</option>
+              <option value="teacher">معلم</option>
+              <option value="employee">کارمند</option>
+            </select>
+          </div>
+          <div class="col-3">
+            <label>مرتب‌سازی</label>
+            <select id="sortBy">
+              <option value="name">نام</option>
+              <option value="rating_desc">امتیاز (نزولی)</option>
+              <option value="rating_asc">امتیاز (صعودی)</option>
+              <option value="years_desc">تجربه (نزولی)</option>
+              <option value="years_asc">تجربه (صعودی)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid" id="peopleList"></div>
+    </section>
+
+    <!-- ====== مقایسه ====== -->
+    <section id="compare">
+      <h2>مقایسه افراد</h2>
+      <div class="card">
+        <header>
+          <strong>انتخاب افراد برای مقایسه</strong>
+          <span class="muted">حداقل ۲ و حداکثر ۴ نفر</span>
+        </header>
+        <div class="form">
+          <div class="col-12">
+            <label>انتخاب</label>
+            <select id="compareSelect" multiple size="6"></select>
+          </div>
+          <div class="col-12" style="display:flex; gap:8px;">
+            <button class="btn primary" id="runCompare">مقایسه</button>
+            <button class="btn" id="clearCompare">پاک‌سازی انتخاب</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" id="compareResult" style="display:none;">
+        <header>
+          <strong>نتیجه مقایسه</strong>
+          <span class="muted">جدول ویژگی‌ها و جمع‌بندی</span>
+        </header>
+        <div id="compareSummary" style="margin-bottom:10px;"></div>
+        <div class="table-wrap">
+          <table>
+            <thead id="cmpHead"></thead>
+            <tbody id="cmpBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== نظرات ====== -->
+    <section id="comments">
+      <h2>نظرات و امتیازها</h2>
+      <div class="card">
+        <header>
+          <strong>ثبت نظر</strong>
+          <span class="muted">برای یک فرد انتخاب کن</span>
+        </header>
+        <div class="form">
+          <div class="col-6">
+            <label>فرد</label>
+            <select id="c_person"></select>
+          </div>
+          <div class="col-3">
+            <label>امتیاز (۱ تا ۵)</label>
+            <input type="number" id="c_rating" min="1" max="5" step="0.5" placeholder="5" />
+          </div>
+          <div class="col-12">
+            <label>نظر</label>
+            <textarea id="c_text" placeholder="چی دوست داشتی/نداشتی؟"></textarea>
+          </div>
+          <div class="col-12" style="display:flex; gap:8px;">
+            <button class="btn accent" id="c_submit">ثبت نظر</button>
+            <button class="btn" id="c_clear">پاک‌سازی</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid" id="commentsList"></div>
+    </section>
+
+    <!-- ====== درباره ما ====== -->
+    <section id="about">
+      <h2>درباره ما</h2>
+      <div class="card">
+        <p>این سامانه برای نیاز سریع و سبک تو ساخته شده: همه‌چیز سمت کاربر، بدون وابستگی به سرور. می‌توانی فایل را هرجا هاست کنی و بلافاصله استفاده کنی. لبته این پروژه ما در حال گسترش و افزایش ویژگی ها و بالا رفتن کیفیت بهبود رنگ بندی و زیباسازی تم سایت ایت من به دلیل فشار درسی وقت خیلی کمی برای کار روی سایت دامرم و امید است این پروژه ب سرعت تمام شود من کسری شیر علی زاده هستم از استان اردبیل ناحیه یک در مدرسه امید انقلاب کلاس نهم هفت  و علاقه زیادی به برنامه نویسی و طراحی سابت دارم  با تشکر از شما</p>
+      </div>
+    </section>
+
+    <!-- ====== تماس با ما ====== -->
+    <section id="contact">
+      <h2>تماس با ما</h2>
+      <div class="card">
+        <div class="form">
+          <div class="col-6">
+            <label>نام</label>
+            <input type="text" id="ct_name" placeholder="نام شما"/>
+          </div>
+          <div class="col-6">
+            <label>ایمیل</label>
+            <input type="email" id="ct_email" placeholder="you@example.com"/>
+          </div>
+          <div class="col-12">
+            <label>پیام</label>
+            <textarea id="ct_msg" placeholder="چه چیزی در ذهنته؟"></textarea>
+          </div>
+          <div class="col-12" style="display:flex; gap:8px;">
+            <button class="btn primary" id="ct_send">ارسال ظاهری</button>
+            <span class="muted">این فرم صرفاً نمایشی است و چیزی ارسال نمی‌کند.البته خیلی سریع رتقا میابد فعلا می توانید از ابزارک زیر که کاملا واقعی و درحال کار هست استفاده نمایید و با در ارتباط باشید با تشکر کسری شیر علی زاده </span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ====== اسکریپت‌ها ====== -->
+  <script>
+    // =========================
+    // ابزارک ترجمه فارسی/انگلیسی
+    // =========================
+    const i18n = {
+      fa: {
+        welcome_title: "خوش آمدید",
+        welcome_sub: "یک سامانه سبک، سریع و کامل برای مقایسه معلم‌ها و کارمندها—بدون بک‌اند، همه‌چیز در مرورگر شما.",
+        quick_start: "شروع سریع",
+        feat_title: "ویژگی‌ها",
+        privacy_title: "حریم خصوصی",
+        guide_title: "راهنما",
+      },
+      en: {
+        welcome_title: "Welcome",
+        welcome_sub: "A lightweight, fast compare system for teachers and employees—no backend, fully in your browser.",
+        quick_start: "Quick start",
+        feat_title: "Features",
+        privacy_title: "Privacy",
+        guide_title: "Guide",
+      }
+    };
+    let currentLang = localStorage.getItem("lang") || "fa";
+    let currentTheme = localStorage.getItem("theme") || "dark";
+
+    const langToggleBtn = document.getElementById("langToggle");
+    const themeToggleBtn = document.getElementById("themeToggle");
+    const brandTitle = document.getElementById("brandTitle");
+
+    function applyTheme() {
+      if (currentTheme === "light") {
+        document.body.classList.add("light");
+        themeToggleBtn.textContent = "روشن";
+      } else {
+        document.body.classList.remove("light");
+        themeToggleBtn.textContent = "تاریک";
+      }
+      localStorage.setItem("theme", currentTheme);
+    }
+    function applyLang() {
+      const dict = i18n[currentLang];
+      document.querySelectorAll("[data-t]").forEach(el => {
+        const k = el.getAttribute("data-t");
+        if (dict[k]) el.textContent = dict[k];
+      });
+      document.documentElement.lang = currentLang === "fa" ? "fa" : "en";
+      document.documentElement.dir = currentLang === "fa" ? "rtl" : "ltr";
+      brandTitle.textContent = currentLang === "fa" ? "سامانه مقایسه" : "Compare System";
+      langToggleBtn.textContent = currentLang === "fa" ? "FA" : "EN";
+      localStorage.setItem("lang", currentLang);
+    }
+    langToggleBtn.addEventListener("click", () => {
+      currentLang = currentLang === "fa" ? "en" : "fa";
+      applyLang();
+    });
+    themeToggleBtn.addEventListener("click", () => {
+      currentTheme = currentTheme === "light" ? "dark" : "light";
+      applyTheme();
+    });
+
+    // =========================
+    // تب‌ها و ناوبری
+    // =========================
+    document.querySelectorAll(".tab").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+        btn.classList.add("active");
+        const target = btn.dataset.target;
+        document.querySelectorAll("main section").forEach(sec => {
+          sec.classList.toggle("active", sec.id === target);
+        });
+      });
+    });
+
+    // =========================
+    // داده نمونه + ذخیره‌سازی
+    // =========================
+    const STORE_KEY = "compare_people_v1";
+    const COMMENT_KEY = "compare_comments_v1";
+    function samplePeople() {
+      return [
+        {
+          id: crypto.randomUUID(),
+          name: "رضا احمدی",
+          role: "teacher",
+          rating: 4.6,
+          skills: ["ریاضی", "برنامه‌ریزی", "ارائه جذاب"],
+          positives: ["صبور", "منظم"],
+          negatives: ["حساس به تأخیر"],
+          department: "ریاضی",
+          years: 12,
+          bio: "معلم ریاضی دبیرستان با تمرکز بر حل مسئله و تفکر انتقادی."
+        },
+        {
+          id: crypto.randomUUID(),
+          name: "سمیه کاظمی",
+          role: "employee",
+          rating: 4.2,
+          skills: ["مدیریت زمان", "اکسل", "گزارش‌نویسی"],
+          positives: ["تیم‌پلیر", "دقیق"],
+          negatives: ["کم‌حرف"],
+          department: "منابع انسانی",
+          years: 8,
+          bio: "کارمند منابع انسانی با تجربه جذب و آموزش."
+        },
+        {
+          id: crypto.randomUUID(),
+          name: "علی موسوی",
+          role: "teacher",
+          rating: 4.9,
+          skills: ["فیزیک", "آزمایشگاه", "تعامل"],
+          positives: ["پرتوان", "باانگیزه"],
+          negatives: ["جزئیات زیاد در کلاس"],
+          department: "فیزیک",
+          years: 15,
+          bio: "معلم فیزیک با تاکید بر تجربه عملی."
+        }
+      ];
+    }
+    let people = [];
+    let comments = [];
+
+    function loadStore() {
+      try {
+        const p = JSON.parse(localStorage.getItem(STORE_KEY));
+        people = Array.isArray(p) ? p : samplePeople();
+      } catch { people = samplePeople(); }
+      try {
+        const c = JSON.parse(localStorage.getItem(COMMENT_KEY));
+        comments = Array.isArray(c) ? c : [];
+      } catch { comments = []; }
+    }
+    function saveStore() {
+      localStorage.setItem(STORE_KEY, JSON.stringify(people));
+      localStorage.setItem(COMMENT_KEY, JSON.stringify(comments));
+    }
+
+    // دکمه‌های ذخیره/بازنشانی
+    document.getElementById("saveAll").addEventListener("click", () => {
+      saveStore();
+      alert("ذخیره شد در مرورگر.");
+    });
+    document.getElementById("resetAll").addEventListener("click", () => {
+      if (!confirm("بازنشانی کامل؟ همه داده‌های محلی پاک می‌شود.")) return;
+      localStorage.removeItem(STORE_KEY);
+      localStorage.removeItem(COMMENT_KEY);
+      loadStore();
+      renderAll();
+      alert("بازنشانی شد.");
+    });
+
+    // =========================
+    // ابزارک چیپ‌ها برای ورودی‌های چندتایی
+    // =========================
+    function attachChipInput(inputEl, containerEl) {
+      inputEl.addEventListener("keydown", e => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          const val = inputEl.value.trim();
+          if (!val) return;
+          addChip(val, containerEl);
+          inputEl.value = "";
+        }
+      });
+    }
+    function addChip(text, containerEl) {
+      const span = document.createElement("span");
+      span.className = "chip active";
+      span.textContent = text;
+      span.title = "برای حذف کلیک کن";
+      span.addEventListener("click", () => span.remove());
+      containerEl.appendChild(span);
+    }
+    function getChips(containerEl) {
+      return Array.from(containerEl.querySelectorAll(".chip")).map(ch => ch.textContent.trim()).filter(Boolean);
+    }
+    function setChips(containerEl, arr) {
+      containerEl.innerHTML = "";
+      (arr || []).forEach(t => addChip(t, containerEl));
+    }
+
+    // اتصال ورودی‌های چیپ
+    attachChipInput(document.getElementById("f_skillInput"), document.getElementById("f_skills"));
+    attachChipInput(document.getElementById("f_posInput"), document.getElementById("f_pos"));
+    attachChipInput(document.getElementById("f_negInput"), document.getElementById("f_neg"));
+
+    // پاک‌سازی فرم
+    document.getElementById("formClear").addEventListener("click", () => {
+      document.getElementById("personForm").reset();
+      ["f_skills","f_pos","f_neg"].forEach(id => document.getElementById(id).innerHTML = "");
+      document.getElementById("f_id").value = "";
+    });
+
+    // ثبت/ویرایش فرد
+    document.getElementById("personForm").addEventListener("submit", e => {
+      e.preventDefault();
+      const id = document.getElementById("f_id").value || crypto.randomUUID();
+      const data = {
+        id,
+        name: document.getElementById("f_name").value.trim(),
+        role: document.getElementById("f_role").value,
+        rating: parseFloat(document.getElementById("f_rating").value),
+        skills: getChips(document.getElementById("f_skills")),
+        positives: getChips(document.getElementById("f_pos")),
+        negatives: getChips(document.getElementById("f_neg")),
+        department: document.getElementById("f_department").value.trim(),
+        years: parseInt(document.getElementById("f_years").value || "0", 10),
+        bio: document.getElementById("f_bio").value.trim()
+      };
+      if (!data.name || isNaN(data.rating)) { alert("نام و امتیاز را درست وارد کن."); return; }
+      const idx = people.findIndex(p => p.id === id);
+      if (idx >= 0) people[idx] = data; else people.push(data);
+      renderAll();
+      document.getElementById("personForm").reset();
+      ["f_skills","f_pos","f_neg"].forEach(id => document.getElementById(id).innerHTML = "");
+      document.getElementById("f_id").value = "";
+      alert("ثبت شد.");
+    });
+
+    // =========================
+    // رندر لیست افراد
+    // =========================
+    const peopleListEl = document.getElementById("peopleList");
+    const searchInput = document.getElementById("searchInput");
+    const filterRole = document.getElementById("filterRole");
+    const sortBy = document.getElementById("sortBy");
+
+    searchInput.addEventListener("input", renderPeople);
+    filterRole.addEventListener("change", renderPeople);
+    sortBy.addEventListener("change", renderPeople);
+
+    function renderPeople() {
+      let list = [...people];
+      const q = searchInput.value.trim().toLowerCase();
+      if (q) {
+        list = list.filter(p =>
+          p.name.toLowerCase().includes(q) ||
+          (p.bio || "").toLowerCase().includes(q) ||
+          p.skills.join(" ").toLowerCase().includes(q)
+        );
+      }
+      const role = filterRole.value;
+      if (role !== "all") list = list.filter(p => p.role === role);
+
+      switch (sortBy.value) {
+        case "name": list.sort((a,b)=>a.name.localeCompare(b.name)); break;
+        case "rating_desc": list.sort((a,b)=>b.rating - a.rating); break;
+        case "rating_asc": list.sort((a,b)=>a.rating - b.rating); break;
+        case "years_desc": list.sort((a,b)=>b.years - a.years); break;
+        case "years_asc": list.sort((a,b)=>a.years - b.years); break;
+      }
+
+      peopleListEl.innerHTML = "";
+      if (!list.length) {
+        peopleListEl.innerHTML = "<div class='muted'>موردی یافت نشد.</div>";
+        return;
+      }
+
+      list.forEach(p => {
+        const avg = averageRatingFromComments(p.id);
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+          <header>
+            <strong>${p.name}</strong>
+            <span class="badge">${p.role === "teacher" ? "معلم" : "کارمند"}</span>
+          </header>
+          <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+            <span class="stars" title="امتیاز کلی">★ ${p.rating.toFixed(1)}</span>
+            <span class="muted">میانگین نظرات: ${avg ? avg.toFixed(1) : "-"}</span>
+            <span class="muted">تجربه: ${p.years} سال</span>
+            <span class="muted">بخش: ${p.department || "-"}</span>
+          </div>
+          <div>
+            <strong>مهارت‌ها:</strong>
+            <div class="chips">${p.skills.map(s=>`<span class="chip">${s}</span>`).join("")}</div>
+          </div>
+          <div style="margin-top:8px;">
+            <strong>مثبت‌ها:</strong>
+            <div class="chips">${p.positives.map(s=>`<span class="chip active">${s}</span>`).join("")}</div>
+          </div>
+          <div style="margin-top:8px;">
+            <strong>منفی‌ها:</strong>
+            <div class="chips">${p.negatives.map(s=>`<span class="chip">${s}</span>`).join("")}</div>
+          </div>
+          <p style="margin-top:8px;" class="muted">${p.bio || ""}</p>
+          <div style="display:flex; gap:8px; margin-top:10px;">
+            <button class="btn" data-act="edit">ویرایش</button>
+            <button class="btn danger" data-act="delete">حذف</button>
+            <button class="btn accent" data-act="add_to_compare">افزودن به مقایسه</button>
+          </div>
+        `;
+        // رویدادها
+        card.querySelector("[data-act='edit']").addEventListener("click", () => {
+          fillFormForEdit(p);
+        });
+        card.querySelector("[data-act='delete']").addEventListener("click", () => {
+          if (!confirm("حذف این فرد؟")) return;
+          people = people.filter(x => x.id !== p.id);
+          renderAll();
+        });
+        card.querySelector("[data-act='add_to_compare']").addEventListener("click", () => {
+          const opt = Array.from(compareSelect.options).find(o => o.value === p.id);
+          if (opt) opt.selected = true;
+          switchToTab("compare");
+        });
+        peopleListEl.appendChild(card);
+      });
+    }
+
+    function fillFormForEdit(p) {
+      document.getElementById("f_id").value = p.id;
+      document.getElementById("f_name").value = p.name;
+      document.getElementById("f_role").value = p.role;
+      document.getElementById("f_rating").value = p.rating;
+      setChips(document.getElementById("f_skills"), p.skills);
+      setChips(document.getElementById("f_pos"), p.positives);
+      setChips(document.getElementById("f_neg"), p.negatives);
+      document.getElementById("f_department").value = p.department || "";
+      document.getElementById("f_years").value = p.years || 0;
+      document.getElementById("f_bio").value = p.bio || "";
+      switchToTab("people");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    // =========================
+    // مقایسه
+    // =========================
+    const compareSelect = document.getElementById("compareSelect");
+    const runCompareBtn = document.getElementById("runCompare");
+    const clearCompareBtn = document.getElementById("clearCompare");
+    const cmpHead = document.getElementById("cmpHead");
+    const cmpBody = document.getElementById("cmpBody");
+    const cmpResult = document.getElementById("compareResult");
+    const cmpSummary = document.getElementById("compareSummary");
+
+    function renderCompareSelect() {
+      compareSelect.innerHTML = "";
+      people.forEach(p => {
+        const opt = document.createElement("option");
+        opt.value = p.id;
+        opt.textContent = `${p.name} — ${p.role === "teacher" ? "معلم" : "کارمند"} — ★ ${p.rating.toFixed(1)}`;
+        compareSelect.appendChild(opt);
+      });
+    }
+    clearCompareBtn.addEventListener("click", () => {
+      Array.from(compareSelect.options).forEach(o => o.selected = false);
+      cmpResult.style.display = "none";
+    });
+
+    runCompareBtn.addEventListener("click", () => {
+      const selectedIds = Array.from(compareSelect.selectedOptions).map(o => o.value);
+      if (selectedIds.length < 2 || selectedIds.length > 4) {
+        alert("حداقل ۲ و حداکثر ۴ نفر انتخاب کن.");
+        return;
+      }
+      const arr = people.filter(p => selectedIds.includes(p.id));
+      drawComparison(arr);
+    });
+
+    function drawComparison(arr) {
+      // سرستون‌ها
+      cmpHead.innerHTML = "<tr><th>ویژگی</th>" + arr.map(p => `<th>${p.name}</th>`).join("") + "</tr>";
+      // ردیف‌ها
+      const rows = [
+        { key: "role", label: "نقش", render: p => p.role === "teacher" ? "معلم" : "کارمند" },
+        { key: "department", label: "بخش/درس", render: p => p.department || "-" },
+        { key: "years", label: "سال‌های تجربه", render: p => p.years + " سال" },
+        { key: "rating", label: "امتیاز کلی", render: p => "★ " + p.rating.toFixed(1) },
+        { key: "skills", label: "مهارت‌ها", render: p => p.skills.join("، ") || "-" },
+        { key: "positives", label: "نکات مثبت", render: p => p.positives.join("، ") || "-" },
+        { key: "negatives", label: "نکات منفی", render: p => p.negatives.join("، ") || "-" },
+      ];
+      cmpBody.innerHTML = rows.map(row => {
+        const vals = arr.map(p => row.render(p));
+        return `<tr><td><strong>${row.label}</strong></td>${vals.map(v => `<td>${v}</td>`).join("")}</tr>`;
+      }).join("");
+
+      // هایلایت اختلاف‌ها: برای عددی‌ها و امتیاز
+      // ردیف امتیاز و تجربه را رنگی کنیم: بهترین سبز، ضعیف‌تر قرمز
+      highlightNumericRow("سال‌های تجربه", arr.map(p => p.years));
+      highlightNumericRow("امتیاز کلی", arr.map(p => p.rating));
+
+      // جمع‌بندی مثبت/منفی
+      const summary = arr.map(p => {
+        const pos = p.positives.length;
+        const neg = p.negatives.length;
+        const tag = pos >= neg ? `<span class="pos">غلبه مثبت</span>` : `<span class="neg">غلبه منفی</span>`;
+        return `<div class="badge">${p.name}: ${tag} — مثبت: ${pos} | منفی: ${neg} | ★ ${p.rating.toFixed(1)}</div>`;
+      }).join(" ");
+      cmpSummary.innerHTML = summary;
+      cmpResult.style.display = "block";
+    }
+
+    function highlightNumericRow(rowLabel, values) {
+      const rows = Array.from(cmpBody.querySelectorAll("tr"));
+      const row = rows.find(r => r.children[0].textContent.trim() === rowLabel);
+      if (!row) return;
+      const nums = values;
+      const max = Math.max(...nums);
+      const min = Math.min(...nums);
+      Array.from(row.children).forEach((cell, idx) => {
+        if (idx === 0) return;
+        const val = nums[idx-1];
+        cell.style.fontWeight = "600";
+        if (val === max) { cell.style.color = "var(--accent)"; }
+        if (val === min) { cell.style.color = "var(--danger)"; }
+      });
+    }
+
+    // =========================
+    // نظرات
+    // =========================
+    const cPerson = document.getElementById("c_person");
+    const cRating = document.getElementById("c_rating");
+    const cText = document.getElementById("c_text");
+    const cSubmit = document.getElementById("c_submit");
+    const cClear = document.getElementById("c_clear");
+    const commentsList = document.getElementById("commentsList");
+
+    function renderCommentSelect() {
+      cPerson.innerHTML = "";
+      people.forEach(p => {
+        const opt = document.createElement("option");
+        opt.value = p.id;
+        opt.textContent = p.name;
+        cPerson.appendChild(opt);
+      });
+    }
+    cClear.addEventListener("click", () => {
+      cRating.value = "";
+      cText.value = "";
+    });
+    cSubmit.addEventListener("click", () => {
+      const pid = cPerson.value;
+      const rating = parseFloat(cRating.value);
+      const text = cText.value.trim();
+      if (!pid || isNaN(rating) || rating < 1 || rating > 5 || !text) {
+        alert("فرد، امتیاز ۱ تا ۵ و متن نظر را وارد کن.");
+        return;
+      }
+      const cm = { id: crypto.randomUUID(), personId: pid, rating, text, ts: Date.now() };
+      comments.push(cm);
+      renderComments();
+      cRating.value = "";
+      cText.value = "";
+      alert("نظر ثبت شد.");
+    });
+
+    function renderComments() {
+      commentsList.innerHTML = "";
+      // گروه‌بندی نظرات بر اساس فرد
+      const byPerson = {};
+      comments.forEach(c => {
+        if (!byPerson[c.personId]) byPerson[c.personId] = [];
+        byPerson[c.personId].push(c);
+      });
+      const personMap = Object.fromEntries(people.map(p => [p.id, p]));
+      Object.entries(byPerson).forEach(([pid, arr]) => {
+        const p = personMap[pid];
+        const wrap = document.createElement("div");
+        wrap.className = "card";
+        const avg = arr.reduce((s,x)=>s+x.rating,0) / arr.length;
+        wrap.innerHTML = `
+          <header>
+            <strong>${p ? p.name : "ناشناخته"}</strong>
+            <span class="stars">★ میانگین: ${avg.toFixed(1)} (${arr.length} نظر)</span>
+          </header>
+          <div class="grid">
+            ${arr.map(x => `
+              <div class="comment">
+                <header>
+                  <span class="stars">★ ${x.rating.toFixed(1)}</span>
+                  <span class="muted">${new Date(x.ts).toLocaleString("fa-IR")}</span>
+                </header>
+                <p>${escapeHTML(x.text)}</p>
+                <div style="display:flex; gap:8px;">
+                  <button class="btn" data-cmd="edit" data-id="${x.id}">ویرایش</button>
+                  <button class="btn danger" data-cmd="delete" data-id="${x.id}">حذف</button>
+                </div>
+              </div>
+            `).join("")}
+          </div>
+        `;
+        // رویدادهای ویرایش/حذف نظر
+        wrap.querySelectorAll("button[data-cmd]").forEach(btn => {
+          const id = btn.dataset.id;
+          btn.addEventListener("click", () => {
+            const cmIdx = comments.findIndex(c => c.id === id);
+            if (cmIdx < 0) return;
+            const cmd = btn.dataset.cmd;
+            if (cmd === "delete") {
+              if (!confirm("حذف نظر؟")) return;
+              comments.splice(cmIdx, 1);
+              renderComments();
+              return;
+            }
+            if (cmd === "edit") {
+              const c = comments[cmIdx];
+              cPerson.value = c.personId;
+              cRating.value = c.rating;
+              cText.value = c.text;
+              // جایگزینی با ثبت مجدد
+              comments.splice(cmIdx, 1);
+              renderComments();
+              switchToTab("comments");
+              alert("نظر برای ویرایش آماده شد. پس از اصلاح، دوباره ثبت کن.");
+            }
+          });
+        });
+        commentsList.appendChild(wrap);
+      });
+      // بروزرسانی میانگین‌ها روی کارت افراد
+      renderPeople();
+    }
+
+    function averageRatingFromComments(pid) {
+      const arr = comments.filter(c => c.personId === pid);
+      if (!arr.length) return null;
+      return arr.reduce((s,x)=>s+x.rating,0) / arr.length;
+    }
+
+    function escapeHTML(str) {
+      return str.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    }
+
+    // =========================
+    // فرم تماس (نمایشی)
+    // =========================
+    document.getElementById("ct_send").addEventListener("click", () => {
+      alert("ارسال نمایشی انجام شد. این فرم چیزی ارسال نمی‌کند.");
+    });
+
+    // =========================
+    // کمک‌تابع‌ها
+    // =========================
+    function switchToTab(id) {
+      document.querySelectorAll(".tab").forEach(t => {
+        const active = t.dataset.target === id;
+        t.classList.toggle("active", active);
+      });
+      document.querySelectorAll("main section").forEach(sec => {
+        sec.classList.toggle("active", sec.id === id);
+      });
+    }
+    function renderAll() {
+      renderPeople();
+      renderCompareSelect();
+      renderCommentSelect();
+      renderComments();
+    }
+
+    // =========================
+    // آغاز
+    // =========================
+    loadStore();
+    applyTheme();
+    applyLang();
+    renderAll();
+    
+  </script>
+  <script type="text/javascript">
+     !function(){var i="HsfgXw",a=window,d=document;function g(){var g=d.createElement("script"),s="https://www.goftino.com/widget/"+i,l=localStorage.getItem("goftino_"+i);g.async=!0,g.src=l?s+"?o="+l:s;d.getElementsByTagName("head")[0].appendChild(g);}"complete"===d.readyState?g():a.attachEvent?a.attachEvent("onload",g):a.addEventListener("load",g,!1);}();
+  </script>
+</body>
+</html>
